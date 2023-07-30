@@ -1,0 +1,40 @@
+*.bak
+*.xml
+*.log
+*.res.lck
+*.out
+*.res
+*.ccl
+*.iml
+*.pyc
+*-checkpoint.ipynb*
+*.vtr
+#*.hdf
+*.tiff
+*.par
+*.coverage
+*.pylint
+*.pickle
+*.pkl
+*.yaml
+*.yml
+
+# build
+*.egg*
+build/
+dist/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# pyCharm project setting
+.idea
+.idea/
+
+# macOS DS indices
+.DS_STORE
+Thumbs.db
+
+# jupyter
+*.ipynb_checkpoints*
