@@ -52,7 +52,23 @@ def explain_response(response: Union[int, requests.models.Response]) -> str:
 
 def download_file(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeout: int = None) -> pathlib.Path:
     """Download the file from the bucket_dict to the destination directory which is here if 
-    set to None"""
+    set to None
+
+    Parameters
+    ----------
+    bucket_dict : Dict
+        Dictionary containing the bucket information
+    destination_dir : pathlib.Path, optional
+        Destination directory, by default None. If not None
+        the directory will be created if it does not exist.
+    timeout : int, optional
+        Timeout in seconds, by default None
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the downloaded file
+    """
     if not isinstance(bucket_dict, Dict):
         raise TypeError('bucket_dict must be a dictionary, not a list. Call download_files instead.')
     if 'key' not in bucket_dict and 'bucket' in bucket_dict:
@@ -60,6 +76,9 @@ def download_file(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeo
     filename = bucket_dict['key']
 
     if destination_dir is not None:
+        destination_dir = pathlib.Path(destination_dir)
+        destination_dir.mkdir(parents=True, exist_ok=True)
+
         target_filename = destination_dir / filename
     else:
         target_filename = pathlib.Path(filename)

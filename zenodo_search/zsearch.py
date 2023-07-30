@@ -1,3 +1,4 @@
+import pathlib
 from typing import List
 from urllib.parse import urlencode
 
@@ -37,9 +38,25 @@ class ReadOnlyDict(dict):
 
 class ZenodoFile(ReadOnlyDict):
 
-    def download(self):
+    def download(self, destination_dir=None, timeout=None):
+        """Download the file from Zenodo.
+
+        Parameters
+        ----------
+        destination_dir : str or pathlib.Path, optional
+            Destination directory, by default None
+        timeout : int, optional
+            Timeout in seconds, by default None
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the downloaded file
+        """
         from .utils import download_file
-        return download_file(self)
+        return download_file(self,
+                             destination_dir=destination_dir,
+                             timeout=timeout)
 
 
 class ZenodoFiles(list):
