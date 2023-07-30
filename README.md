@@ -1,11 +1,11 @@
-# Zsearch
+# Zenodo Search
 
 Perform zenodo searches with python.
 
 ## Installation
 
 ```bash
-pip install zsearch
+pip install zenodo_search
 ```
 
 ## Dependencies
@@ -15,7 +15,7 @@ pip install zsearch
 ## Usage
 
 ```python
-import zsearch
+import zenodo_search as zsearch
 
 search_string = 'resource_type.type:other AND creators.name:("Probst, Matthias")'
 records = zsearch.search(search_string)
