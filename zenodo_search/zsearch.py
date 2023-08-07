@@ -1,4 +1,5 @@
 import pathlib
+import re
 from typing import List
 from urllib.parse import urlencode
 
@@ -69,17 +70,17 @@ class ZenodoFiles(list):
         return download_files(self)
 
 
-class Record(ReadOnlyDict):
-    """Zenodo Record. Effectively a wrapper around the dictionary which is
+class ZenodoRecord(ReadOnlyDict):
+    """Zenodo ZenodoRecord. Effectively a wrapper around the dictionary which is
     returned by the Zenodo API upon the query request
     """
     __specials__ = {'files': ZenodoFiles}
 
     def __repr__(self):
-        return f'<Record {self.links.latest_html}: {self.metadata.title}>'
+        return f'<ZenodoRecord {self.links.latest_html}: {self.metadata.title}>'
 
     def __str__(self):
-        return f'<Record {self.links.latest_html}: {self.metadata.title}>'
+        return f'<ZenodoRecord {self.links.latest_html}: {self.metadata.title}>'
 
     def _repr_html_(self):
         link = self.links["latest_html"]
@@ -87,35 +88,35 @@ class Record(ReadOnlyDict):
         return f'<a href="{link}" target="_blank"><img src="{badge}" alt="Zenodo Badge" /></a> {self.metadata.title}'
 
 
-class Records:
-    """Multiple Zenodo Record objects"""
+class ZenodoRecords:
+    """Multiple Zenodo ZenodoRecord objects"""
 
-    def __init__(self, records: List[Record], query_string: str, response):
-        self._records = records
+    def __init__(self, ZenodoRecords: List[ZenodoRecord], query_string: str, response):
+        self._ZenodoRecords = ZenodoRecords
         self.query_string = query_string
         self.response = response
 
     def __repr__(self) -> str:
-        return f'<Records ({self.query_string["q"]} with {len(self)} records>'
+        return f'<ZenodoRecords ({self.query_string["q"]} with {len(self)} ZenodoRecords>'
 
     def __len__(self):
-        return len(self._records)
+        return len(self._ZenodoRecords)
 
     def __getitem__(self, item):
-        return self._records[item]
+        return self._ZenodoRecords[item]
 
     def __iter__(self):
-        return iter(self._records)
+        return iter(self._ZenodoRecords)
 
 
-def search(search_string: str):
+def search(search_string: str) -> ZenodoRecords:
     """post query to zenodo api
 
     Examples
     --------
-    >>> from zsearch import search
-    >>> search('resource_type.type:other AND creators.name:("Probst, Matthias")')
-    >>> search('type:dataset AND creators.affiliation:("University A" OR "Cambridge")')
+    >>> import zenodo_search as zsearch
+    >>> zsearch('resource_type.type:other AND creators.name:("Probst, Matthias")')
+    >>> zsearch('type:dataset AND creators.affiliation:("University A" OR "Cambridge")')
     """
     search_query = {"q": search_string.replace("/", "*")}
     api_url = BASE_RECORD_URL + urlencode(search_query)
@@ -129,11 +130,34 @@ def search(search_string: str):
 
         # Extract relevant information from the response
         if 'hits' in data:
-            return Records([Record(hit) for hit in data['hits']['hits']],
+            return ZenodoRecords([ZenodoRecord(hit) for hit in data['hits']['hits']],
                            search_query,
                            response)
     else:
         raise RuntimeError(f"Error: Request failed with status code {response.status_code}")
+
+
+def search_doi(doi: str) -> ZenodoRecord:
+    """Searches for an exact DOI"""
+    if isinstance(doi, int):
+        doi = f'10.5281/zenodo.{doi}'
+    elif isinstance(doi, str):
+        if doi.startswith('https://zenodo.org/record/'):
+            doi = doi.replace('https://zenodo.org/record/', '10.5281/zenodo.')
+        elif bool(re.match(r'^\d+$', doi)):
+            # pure numbers:
+            doi = f'10.5281/zenodo.{doi}'
+    else:
+        raise TypeError(f'Invalid type for DOI: {doi}. Expected int or str')
+
+    if not bool(re.match(r'^10\.5281/zenodo\.\d+$', doi)):
+        raise ValueError(f'Invalid DOI pattern: {doi}. Expected format: 10.5281/zenodo.<number>')
+
+    r = search(f'doi:{doi}')
+    if len(r) == 0:
+        raise ValueError(f'No record found for DOI: {doi}')
+    assert len(r) == 1
+    return r[0]
 
 
 def search_keywords(keywords: List[str]):
