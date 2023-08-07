@@ -1,5 +1,6 @@
 """Utility functions for the zsearch."""
 import pathlib
+import re
 from typing import Union, Dict, List, Iterable
 
 import requests
@@ -101,3 +102,21 @@ def download_files(file_buckets: Iterable[Dict],
     """Download the files from the list of bucket dictionaries to the destination directory which is here if
     set to None"""
     return [download_file(bucket_dict, destination_dir, timeout) for bucket_dict in file_buckets]
+
+
+def parse_doi(doi):
+    if isinstance(doi, int):
+        doi = f'10.5281/zenodo.{doi}'
+    elif isinstance(doi, str):
+        if doi.startswith('https://zenodo.org/record/'):
+            doi = doi.replace('https://zenodo.org/record/', '10.5281/zenodo.')
+        elif bool(re.match(r'^\d+$', doi)):
+            # pure numbers:
+            doi = f'10.5281/zenodo.{doi}'
+    else:
+        raise TypeError(f'Invalid type for DOI: {doi}. Expected int or str')
+
+    if not bool(re.match(r'^10\.5281/zenodo\.\d+$', doi)):
+        raise ValueError(f'Invalid DOI pattern: {doi}. Expected format: 10.5281/zenodo.<number>')
+
+    return doi
