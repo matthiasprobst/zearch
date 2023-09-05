@@ -105,11 +105,14 @@ def download_files(file_buckets: Iterable[Dict],
 
 
 def parse_doi(doi):
+    """takes doi as input, which can be the doi or Zenodo-URL"""
     if isinstance(doi, int):
         doi = f'10.5281/zenodo.{doi}'
     elif isinstance(doi, str):
         if doi.startswith('https://zenodo.org/record/'):
             doi = doi.replace('https://zenodo.org/record/', '10.5281/zenodo.')
+        elif doi.startswith('https://doi.org/'):
+            doi = doi.split('https://doi.org/')[1]
         elif bool(re.match(r'^\d+$', doi)):
             # pure numbers:
             doi = f'10.5281/zenodo.{doi}'
