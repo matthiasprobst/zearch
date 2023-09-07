@@ -61,8 +61,8 @@ class ZenodoFile(ReadOnlyDict):
         pathlib.Path
             Path to the downloaded file
         """
-        from .utils import download_bucket
-        return download_bucket(self,
+        from .utils import download_file
+        return download_file(self,
                              destination_dir=destination_dir,
                              timeout=timeout)
 
@@ -75,8 +75,8 @@ class ZenodoFiles(list):
 
     def download(self, destination_dir=None, timeout=None):
         """Download all registered files."""
-        from .utils import download_buckets
-        return download_buckets(self, destination_dir, timeout)
+        from .utils import download_files
+        return download_files(self, destination_dir, timeout)
 
 
 class ZenodoRecord(ReadOnlyDict):

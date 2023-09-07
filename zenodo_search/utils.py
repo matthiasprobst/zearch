@@ -51,7 +51,7 @@ def explain_response(response: Union[int, requests.models.Response]) -> str:
     raise TypeError(f"response must be of type int or requests.models.Response, not {type(response)}")
 
 
-def download_bucket(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeout: int = None) -> pathlib.Path:
+def download_file(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeout: int = None) -> pathlib.Path:
     """Download the file from the bucket_dict to the destination directory which is the current
     directory if `destination_dir` is set to `None
 
@@ -71,7 +71,7 @@ def download_bucket(bucket_dict: Dict, destination_dir: pathlib.Path = None, tim
         Path to the downloaded file
     """
     if not isinstance(bucket_dict, dict):
-        raise TypeError('bucket_dict must be a dictionary, not a list. Call download_buckets instead.')
+        raise TypeError('bucket_dict must be a dictionary, not a list. Call download_files instead.')
     if 'key' not in bucket_dict and 'bucket' in bucket_dict:
         raise KeyError(f'Input dictionary does not seem to be a bucket dictionary: {bucket_dict}')
     filename = bucket_dict['key']
@@ -96,7 +96,7 @@ def download_bucket(bucket_dict: Dict, destination_dir: pathlib.Path = None, tim
     return target_filename
 
 
-def download_buckets(file_buckets: Iterable[Dict],
+def download_files(file_buckets: Iterable[Dict],
                      destination_dir: pathlib.Path = None,
                      timeout: int = None) -> List[pathlib.Path]:
     """Download the files from the list of bucket dictionaries to the destination directory which is here if
@@ -112,7 +112,7 @@ def download_buckets(file_buckets: Iterable[Dict],
     timeout : int, optional
         Timeout in seconds passed to requests.get, by default None
     """
-    return [download_bucket(bucket_dict, destination_dir, timeout) for bucket_dict in file_buckets]
+    return [download_file(bucket_dict, destination_dir, timeout) for bucket_dict in file_buckets]
 
 
 def parse_doi(doi) -> str:

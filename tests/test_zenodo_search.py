@@ -31,11 +31,11 @@ class TestZenodoSearch(unittest.TestCase):
 
     def test_download_bucket(self):
         with self.assertRaises(TypeError):
-            zenodo_search.download_bucket(4.5)
+            zenodo_search.download_file(4.5)
         with self.assertRaises(KeyError):
-            zenodo_search.download_bucket({})
+            zenodo_search.download_file({})
         with self.assertRaises(KeyError):
-            zenodo_search.download_bucket({'bucket': 'mybucket'})
+            zenodo_search.download_file({'bucket': 'mybucket'})
 
         zrecs = zsearch.search('10.5281/zenodo.8220739')
         zfile = zrecs[0].files[0]
