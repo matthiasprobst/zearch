@@ -10,6 +10,10 @@ BASE_RECORD_URL = 'https://zenodo.org/api/records?'
 
 
 class ReadOnlyDict(dict):
+    """Read-only dictionary. This is a dictionary which can be accessed as
+    a normal dictionary, but cannot be modified. It is used to wrap the
+    Zenodo API response, so that the user cannot modify the response."""
+
     __specials__ = {}
 
     def __init__(self, *args, **kwargs):
@@ -39,6 +43,8 @@ class ReadOnlyDict(dict):
 
 
 class ZenodoFile(ReadOnlyDict):
+    """Zenodo file object. Effectively a wrapper around the dictionary which is
+    returned by the Zenodo API upon the query request"""
 
     def download(self, destination_dir=None, timeout=None):
         """Download the file from Zenodo.
@@ -55,20 +61,22 @@ class ZenodoFile(ReadOnlyDict):
         pathlib.Path
             Path to the downloaded file
         """
-        from .utils import download_file
-        return download_file(self,
+        from .utils import download_bucket
+        return download_bucket(self,
                              destination_dir=destination_dir,
                              timeout=timeout)
 
 
 class ZenodoFiles(list):
+    """List of ZenodoFile objects"""
 
     def __getitem__(self, item):
         return ZenodoFile(super().__getitem__(item))
 
-    def download(self):
-        from .utils import download_files
-        return download_files(self)
+    def download(self, destination_dir=None, timeout=None):
+        """Download all registered files."""
+        from .utils import download_buckets
+        return download_buckets(self, destination_dir, timeout)
 
 
 class ZenodoRecord(ReadOnlyDict):
@@ -92,8 +100,8 @@ class ZenodoRecord(ReadOnlyDict):
 class ZenodoRecords:
     """Multiple Zenodo ZenodoRecord objects"""
 
-    def __init__(self, ZenodoRecords: List[ZenodoRecord], query_string: str, response):
-        self._ZenodoRecords = ZenodoRecords
+    def __init__(self, zenodo_records: List[ZenodoRecord], query_string: str, response):
+        self._zenodo_records = zenodo_records
         self.query_string = query_string
         self.response = response
 
@@ -101,13 +109,13 @@ class ZenodoRecords:
         return f'<ZenodoRecords ({self.query_string["q"]} with {len(self)} ZenodoRecords>'
 
     def __len__(self):
-        return len(self._ZenodoRecords)
+        return len(self._zenodo_records)
 
     def __getitem__(self, item):
-        return self._ZenodoRecords[item]
+        return self._zenodo_records[item]
 
     def __iter__(self):
-        return iter(self._ZenodoRecords)
+        return iter(self._zenodo_records)
 
 
 def search(search_string: str) -> ZenodoRecords:
