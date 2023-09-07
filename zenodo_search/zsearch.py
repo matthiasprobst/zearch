@@ -89,7 +89,7 @@ class ZenodoRecord(ReadOnlyDict):
         return f'<ZenodoRecord {self.links.latest_html}: {self.metadata.title}>'
 
     def __str__(self):
-        return f'<ZenodoRecord {self.links.latest_html}: {self.metadata.title}>'
+        return self.__repr__()
 
     def _repr_html_(self):
         link = self.links["latest_html"]
