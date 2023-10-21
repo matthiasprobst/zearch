@@ -2,6 +2,10 @@
 
 Perform zenodo searches with python.
 
+**Note**: Zenodo updated the backend. This resulted in the searches failing with the old version of this package. 
+For example, the doi string should not be the full doi anymore, but only the id. Some of the old search strings 
+also don't work anymore. This is hopefully a temporary issue and will be fixed soon.
+
 ## Installation
 
 ```bash

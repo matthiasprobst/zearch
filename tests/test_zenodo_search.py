@@ -11,12 +11,25 @@ __this_dir__ = pathlib.Path(__file__).parent
 
 class TestZenodoSearch(unittest.TestCase):
 
+    # def test_search_doi_sandbox(self):
+
+    def test_search_doi_sandbox(self):
+        r = zsearch.search_doi('8281285', sandbox=True)
+        self.assertIsInstance(r, zsearch.ZenodoRecord)
+        self.assertEqual('10.5281/zenodo.8281285', r.doi)
+
+        r = zsearch.search('doi:8281285', sandbox=True)
+        self.assertIsInstance(r, zsearch.ZenodoRecords)
+        self.assertEqual('10.5281/zenodo.8281285', r[0].doi)
+
     def test_search_doi(self):
-        self.assertEqual(len(zsearch.search('10.5281/zenodo.8220739')), 1)
-        self.assertEqual(len(zsearch.search('doi:10.5281/zenodo.8220739')), 1)
-        self.assertEqual(len(zsearch.search('doi:10.5281/zenodo.8220739')), 1)
-        self.assertIsInstance(zsearch.search('doi:10.5281/zenodo.8220739'), zsearch.ZenodoRecords)
-        self.assertIsInstance(zsearch.search_doi('10.5281/zenodo.8220739'), zsearch.ZenodoRecord)
+        r = zsearch.search_doi('8357399', sandbox=False)
+        self.assertIsInstance(r, zsearch.ZenodoRecord)
+        self.assertEqual('10.5281/zenodo.8357399', r.doi)
+
+        r = zsearch.search('doi:8357399')
+        self.assertIsInstance(r, zsearch.ZenodoRecords)
+        self.assertEqual('10.5281/zenodo.8357399', r[0].doi)
 
     def test_explain_response(self):
         r = zsearch.search('10.5281/zenodo.8220739')
@@ -37,7 +50,7 @@ class TestZenodoSearch(unittest.TestCase):
         with self.assertRaises(KeyError):
             zenodo_search.download_file({'bucket': 'mybucket'})
 
-        zrecs = zsearch.search('10.5281/zenodo.8220739')
+        zrecs = zsearch.search('doi:8220739')
         zfile = zrecs[0].files[0]
         self.assertIsInstance(zfile, dict)
         self.assertIsInstance(zrecs[0], zsearch.ZenodoRecord)

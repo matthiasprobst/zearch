@@ -51,14 +51,14 @@ def explain_response(response: Union[int, requests.models.Response]) -> str:
     raise TypeError(f"response must be of type int or requests.models.Response, not {type(response)}")
 
 
-def download_file(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeout: int = None) -> pathlib.Path:
+def download_file(file_dict: Dict, destination_dir: pathlib.Path = None, timeout: int = None) -> pathlib.Path:
     """Download the file from the bucket_dict to the destination directory which is the current
     directory if `destination_dir` is set to `None
 
     Parameters
     ----------
-    bucket_dict : Dict
-        Dictionary containing the bucket information
+    file_dict : Dict
+        Dictionary containing the file information
     destination_dir : pathlib.Path, optional
         Destination directory, by default None. If not None
         the directory will be created if it does not exist.
@@ -70,10 +70,18 @@ def download_file(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeo
     pathlib.Path
         Path to the downloaded file
     """
-    if not isinstance(bucket_dict, dict):
+    if not isinstance(file_dict, dict):
         raise TypeError('bucket_dict must be a dictionary, not a list. Call download_files instead.')
-    if 'key' not in bucket_dict and 'bucket' in bucket_dict:
-        raise KeyError(f'Input dictionary does not seem to be a bucket dictionary: {bucket_dict}')
+
+    if 'key' not in file_dict:
+        # is a bucket dict!
+        response = requests.get(file_dict['links']['self'],
+                                timeout=timeout)
+        bucket_dict = response.json()
+    else:
+        bucket_dict = file_dict
+
+    # Get the record metadata
     filename = bucket_dict['key']
 
     if destination_dir is not None:
@@ -87,18 +95,14 @@ def download_file(bucket_dict: Dict, destination_dir: pathlib.Path = None, timeo
     if target_filename.exists():
         return target_filename
 
-    # Get the record metadata
-    response = requests.get(bucket_dict['links']['self'],
-                            timeout=timeout)
-
     with open(target_filename, 'wb') as f:
-        f.write(response.content)
+        f.write(requests.get(bucket_dict['links']['content']).content)
     return target_filename
 
 
 def download_files(file_buckets: Iterable[Dict],
-                     destination_dir: pathlib.Path = None,
-                     timeout: int = None) -> List[pathlib.Path]:
+                   destination_dir: pathlib.Path = None,
+                   timeout: int = None) -> List[pathlib.Path]:
     """Download the files from the list of bucket dictionaries to the destination directory which is here if
     set to None
 

@@ -4,9 +4,10 @@ from urllib.parse import urlencode
 
 import requests
 
-from .utils import parse_doi
+from . import utils
 
 BASE_RECORD_URL = 'https://zenodo.org/api/records?'
+BASE_SANDBOX_URL = 'https://sandbox.zenodo.org/api/records?'
 
 
 class ReadOnlyDict(dict):
@@ -91,10 +92,16 @@ class ZenodoRecord(ReadOnlyDict):
     def __str__(self):
         return self.__repr__()
 
+    @property
+    def html_badge(self, style='markdown'):
+        return f'<a href="https://doi.org/{self.doi}"><img src="https://zenodo.org/badge/DOI/{self.doi}.svg" alt="DOI"></a>'
+
+    @property
+    def markdown_badge(self):
+        return f'[![DOI](https://zenodo.org/badge/DOI/{self.doi}.svg)](https://doi.org/{self.doi})'
+
     def _repr_html_(self):
-        link = self.links["latest_html"]
-        badge = self.links["badge"]
-        return f'<a href="{link}" target="_blank"><img src="{badge}" alt="Zenodo Badge" /></a> {self.metadata.title}'
+        return f'{self.html_badge} {self.metadata.title}'
 
 
 class ZenodoRecords:
@@ -118,7 +125,7 @@ class ZenodoRecords:
         return iter(self._zenodo_records)
 
 
-def search(search_string: str) -> ZenodoRecords:
+def search(search_string: str, sandbox: bool = False) -> ZenodoRecords:
     """post query to zenodo api
 
     Examples
@@ -128,7 +135,10 @@ def search(search_string: str) -> ZenodoRecords:
     >>> zsearch('type:dataset AND creators.affiliation:("University A" OR "Cambridge")')
     """
     search_query = {"q": search_string.replace("/", "*")}
-    api_url = BASE_RECORD_URL + urlencode(search_query)
+    if sandbox:
+        api_url = BASE_SANDBOX_URL + urlencode(search_query)
+    else:
+        api_url = BASE_RECORD_URL + urlencode(search_query)
 
     response = requests.get(api_url)
 
@@ -138,6 +148,10 @@ def search(search_string: str) -> ZenodoRecords:
         data = response.json()
 
         # Extract relevant information from the response
+        if sandbox:
+            return ZenodoRecords([ZenodoRecord(hit) for hit in data],
+                                 search_query,
+                                 response)
         if 'hits' in data:
             return ZenodoRecords([ZenodoRecord(hit) for hit in data['hits']['hits']],
                                  search_query,
@@ -146,11 +160,23 @@ def search(search_string: str) -> ZenodoRecords:
         raise RuntimeError(f"Error: Request failed with status code {response.status_code}")
 
 
-def search_doi(doi: str) -> ZenodoRecord:
-    """Searches for an exact DOI"""
-    doi = parse_doi(doi)
+def search_doi(doi: str, sandbox: bool = False, parse_doi=False) -> ZenodoRecord:
+    """Searches for an exact DOI
 
-    r = search(f'doi:{doi}')
+    Note:
+    ----
+    Since changes on zenodo backend (~Oct. 2023) the search for DOIs is not working anymore
+    as initially implemented. Therefore, the search is now done by the DOI string itself without
+    any prefixes added by the utils.parse_doi function. It is disabled by default, but can be
+    enabled by setting the parse_doi flag to True.
+    """
+    if parse_doi:
+        doi = utils.parse_doi(doi)
+    else:
+        if 'zenodo.org' in doi:
+            doi = doi.rsplit('/', 1)[-1]
+
+    r = search(f'doi:{doi}', sandbox)
     if len(r) == 0:
         raise ValueError(f'No record found for DOI: {doi}')
     assert len(r) == 1
