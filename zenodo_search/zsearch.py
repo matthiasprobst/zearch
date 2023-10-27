@@ -149,7 +149,7 @@ def search(search_string: str, sandbox: bool = False) -> ZenodoRecords:
 
         # Extract relevant information from the response
         if sandbox:
-            return ZenodoRecords([ZenodoRecord(hit) for hit in data],
+            return ZenodoRecords([ZenodoRecord(hit) for hit in data['hits']['hits']],
                                  search_query,
                                  response)
         if 'hits' in data:

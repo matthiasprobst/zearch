@@ -96,7 +96,7 @@ def download_file(file_dict: Dict, destination_dir: pathlib.Path = None, timeout
         return target_filename
 
     with open(target_filename, 'wb') as f:
-        f.write(requests.get(bucket_dict['links']['content']).content)
+        f.write(requests.get(bucket_dict['links']['self']).content)
     return target_filename
 
 

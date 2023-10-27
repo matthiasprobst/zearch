@@ -3,7 +3,8 @@ import pathlib
 import shutil
 import unittest
 
-import zenodo_search
+import yaml
+
 import zenodo_search as zsearch
 
 __this_dir__ = pathlib.Path(__file__).parent
@@ -34,21 +35,21 @@ class TestZenodoSearch(unittest.TestCase):
     def test_explain_response(self):
         r = zsearch.search('10.5281/zenodo.8220739')
         self.assertEqual('200: OK: Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.',
-                         zenodo_search.explain_response(r.response))
+                         zsearch.explain_response(r.response))
         self.assertEqual('200: OK: Request succeeded. Response included. Usually sent for GET/PUT/PATCH requests.',
-                         zenodo_search.explain_response(200))
+                         zsearch.explain_response(200))
         with self.assertRaises(TypeError):
-            zenodo_search.explain_response('200')
+            zsearch.explain_response('200')
         with self.assertRaises(TypeError):
-            zenodo_search.explain_response(200.0)
+            zsearch.explain_response(200.0)
 
     def test_download_bucket(self):
         with self.assertRaises(TypeError):
-            zenodo_search.download_file(4.5)
+            zsearch.download_file(4.5)
         with self.assertRaises(KeyError):
-            zenodo_search.download_file({})
+            zsearch.download_file({})
         with self.assertRaises(KeyError):
-            zenodo_search.download_file({'bucket': 'mybucket'})
+            zsearch.download_file({'bucket': 'mybucket'})
 
         zrecs = zsearch.search('doi:8220739')
         zfile = zrecs[0].files[0]
@@ -67,6 +68,11 @@ class TestZenodoSearch(unittest.TestCase):
 
         filename = zfile.download(destination_dir=None, timeout=10)
         self.assertTrue(filename.exists())
+
+        with open(filename, 'r') as f:
+            data = yaml.safe_load(f)
+            self.assertIn('institution', data)
+
         filename = zfile.download(destination_dir=None, timeout=10)
         self.assertTrue(filename.exists())
         filename.unlink(missing_ok=True)
