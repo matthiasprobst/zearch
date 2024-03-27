@@ -84,7 +84,7 @@ class ZenodoRecord(ReadOnlyDict):
     """Zenodo ZenodoRecord. Effectively a wrapper around the dictionary which is
     returned by the Zenodo API upon the query request
     """
-    __specials__ = {'files': ZenodoFiles}
+    __specials__ = {'files': ZenodoFiles, 'sandbox': False}
 
     def __repr__(self):
         return f'<ZenodoRecord {self.links.latest_html}: {self.metadata.title}>'
@@ -94,14 +94,26 @@ class ZenodoRecord(ReadOnlyDict):
 
     @property
     def html_badge(self, style='markdown'):
-        return f'<a href="https://doi.org/{self.doi}"><img src="https://zenodo.org/badge/DOI/{self.doi}.svg" alt="DOI"></a>'
+        if self.__specials__['sandbox']:
+            url = f'https://sandbox.zenodo.org/records/{self.id}'
+        else:
+            url = "https://doi.org/{self.doi}"
+        return f'<a href="{url}"><img src="https://zenodo.org/badge/DOI/{self.doi}.svg" alt="DOI"></a>'
 
     @property
     def markdown_badge(self):
-        return f'[![DOI](https://zenodo.org/badge/DOI/{self.doi}.svg)](https://doi.org/{self.doi})'
+        if self.__specials__['sandbox']:
+            url = f'https://sandbox.zenodo.org/records/{self.id}'
+        else:
+            url = "https://doi.org/{self.doi}"
+        return f'[![DOI](https://zenodo.org/badge/DOI/{self.doi}.svg)]({url})'
 
     def _repr_html_(self):
         return f'{self.html_badge} {self.metadata.title}'
+
+
+class ZenodoSandboxRecord(ZenodoRecord):
+    __specials__ = {'sandbox': True}
 
 
 class ZenodoRecords:
@@ -149,7 +161,7 @@ def search(search_string: str, sandbox: bool = False) -> ZenodoRecords:
 
         # Extract relevant information from the response
         if sandbox:
-            return ZenodoRecords([ZenodoRecord(hit) for hit in data['hits']['hits']],
+            return ZenodoRecords([ZenodoSandboxRecord(hit) for hit in data['hits']['hits']],
                                  search_query,
                                  response)
         if 'hits' in data:
